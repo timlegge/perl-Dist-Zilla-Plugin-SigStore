@@ -4,7 +4,7 @@ Dist::Zilla::Plugin::SigStore::SignRelease - Sign Release with SigStore
 
 # VERSION
 
-version 0.01
+version 0.02
 
 # SYNOPSIS
 
@@ -15,9 +15,9 @@ In your `dist.ini`:
 upload_to_cpan     = 1             ; Upload the sigstore bundle to CPAN (optional)
 sigstore_extension = sigstore.json ; Extension of the sigstore bundle (optional)
 answer_yes         = 1             ; Answer yes to any cosign messages (Default = 0)
-
-B<Note>: that I<upload_to_cpan> defaults to true (1).
 ```
+
+**Note**: that _upload\_to\_cpan_ defaults to true (1).
 
 # DESCRIPTION
 
@@ -55,22 +55,26 @@ cosign verify-blob Dist-Zilla-Plugin-SigStore-SignRelease-0.01.tar.gz \
     --certificate-oidc-issuer https://accounts.google.com
 ```
 
+The GitHub repository also includes a script in the examples directory that
+can be used to manually verify signatures.
+
+[https://github.com/timlegge/perl-Dist-Zilla-Plugin-SigStore/blob/main/example/verify\_sigstore.pl](https://github.com/timlegge/perl-Dist-Zilla-Plugin-SigStore/blob/main/example/verify_sigstore.pl)
+
 # ATTRIBUTES
 
-> ```
-> upload_to_cpan
->     true (1) or false (0) - Default = 1
->
-> sigstore_extension
->     Defaults to 'sigstore.json' (Optional)
->     The extension is appended to the end of the distribution's filename.
->
->     example: Distribution-0.99.tar.gz.sigstore.json
->
-> answer_yes
->     true (1) or false (0) - Default = 0
->     This answers yes to any cosign messages that require an answer.
-> ```
+- upload\_to\_cpan
+    true (1) or false (0) - Default = 1
+- sigstore\_extension
+    Defaults to 'sigstore.json' (Optional)
+    The extension is appended to the end of the distribution's filename.
+
+    ```
+    example: Distribution-0.99.tar.gz.sigstore.json
+    ```
+
+- answer\_yes
+    true (1) or false (0) - Default = 0
+    This answers yes to any cosign messages that require an answer.
 
 # METHODS
 
