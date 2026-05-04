@@ -1,7 +1,6 @@
+package Dist::Zilla::Plugin::SigStore::SignRelease;
 use strict;
 use warnings;
-
-package Dist::Zilla::Plugin::SigStore::SignRelease;
 
 # VERSION
 
@@ -15,14 +14,16 @@ use File::Which qw(which);
 use JSON::MaybeXS;
 use MIME::Base64  qw/decode_base64/;
 use Try::Tiny;
-use Dist::Zilla::Plugin::SigStore::UploadToCPAN;
-with 'Dist::Zilla::Role::AfterRelease';
+with 'Dist::Zilla::Role::BeforeRelease',
+     'Dist::Zilla::Role::AfterRelease';
 
 use namespace::autoclean;
 
 has upload_to_cpan      => (is => 'ro', default => 1);
 has answer_yes          => (is => 'ro', default => 0);
 has sigstore_extension  => (is => 'ro', default => 'sigstore.json');
+has releaser_name       => (is => 'ro', default => '@Filter/UploadToCPAN');
+has _releaser           => (is => 'rw', init_arg => undef,);
 has _cosign_app => (
     is      => 'ro',
     lazy    => 1,
@@ -36,12 +37,14 @@ sub _sign_release {
   my $bundle = $filename . '.' . $self->sigstore_extension;
   my $exit_code = 1;
 
+  my $answer = $self->answer_yes ? '-y' : '';
+
   if (! defined $self->_cosign_app) {
     $self->log_fatal("Unable to find 'cosign' by SigStore? Is it installed?");
   } else {
     try {
       my $cosign = $self->_cosign_app;
-      `$cosign sign-blob '$filename' --bundle '$bundle'`;
+      `$cosign sign-blob $answer '$filename' --bundle '$bundle'`;
       $exit_code = $? >> 8;
     } catch {
       $self->log("cosign failed for '$filename': $_");
@@ -133,7 +136,7 @@ sub _verify_sigstore_signature {
   } else {
     try {
       my $cosign = $self->_cosign_app;
-      my $verified = `$cosign verify-blob '$filename' --bundle '$bundle_name' --certificate-identity '$identity' --certificate-oidc-issuer '$issuer' 2>&1`;
+      $verified = `$cosign verify-blob '$filename' --bundle '$bundle_name' --certificate-identity '$identity' --certificate-oidc-issuer '$issuer' 2>&1`;
       $exit_code = $? >> 8;
     } catch {
       $self->log("cosign failed for '$filename': $_");
@@ -143,9 +146,22 @@ sub _verify_sigstore_signature {
     my $log = "Verified that $filename was signed by $identity via $issuer\n";
     $self->log($log);
   } else {
-    $self->log($verified);
+    $self->log($verified // "cosign verify failed with no output");
   }
   return $exit_code == 0 ? 1 : 0;
+}
+
+sub before_release {
+  my $self = shift;
+
+  return unless $self->upload_to_cpan;
+
+  my $releaser = $self->zilla->plugin_named($self->releaser_name);
+
+  $self->log_fatal("Unable to locate a releaser") if ! defined $releaser;
+  $self->_releaser($releaser);
+
+  return;
 }
 
 sub after_release {
@@ -156,13 +172,10 @@ sub after_release {
   my $bundle = $filename . '.' . $self->sigstore_extension;
 
   if ($signed && $self->upload_to_cpan && -f $bundle) {
-    my $uploader = Dist::Zilla::Plugin::SigStore::UploadToCPAN->new(
-        zilla       => $self->zilla,
-        plugin_name => 'SigStore::UploadToCPAN',
-    );
+    my $uploader = $self->_releaser->uploader;
     my $verified = $self->_verify_sigstore_signature($filename, $bundle);
     if ($verified == 1) {
-      $uploader->upload_to_cpan($bundle);
+      $uploader->upload_file($bundle);
     } else {
         $self->log("CRITICAL: verification of signature prior to upload failed");
         $self->log_fatal("CRITICAL: This should not happen!!!!");
@@ -170,7 +183,6 @@ sub after_release {
   } else {
       $self->log("cosign bundle was not created") if (! -f $bundle);
   }
-
 }
 
 sub BUILDARGS {
@@ -194,6 +206,7 @@ __END__
 In your F<dist.ini>:
 
     [SigStore::SignRelease]
+    releaser_name      = @Filter/UploadToCPAN       ; The releaser that is being used
     upload_to_cpan     = 1             ; Upload the sigstore bundle to CPAN (optional)
     sigstore_extension = sigstore.json ; Extension of the sigstore bundle (optional)
     answer_yes         = 1             ; Answer yes to any cosign messages (Default = 0)
@@ -254,15 +267,31 @@ L<https://github.com/timlegge/perl-Dist-Zilla-Plugin-SigStore/blob/main/example/
     true (1) or false (0) - Default = 0
     This answers yes to any cosign messages that require an answer.
 
+=item releaser_name
+    The name of the Dist::Zilla releaser plugin to use for uploading the
+    sigstore bundle. Defaults to '@Filter/UploadToCPAN'. Change this if
+    your bundle plugin has a different name in dist.ini.
+
+    example: releaser_name = @Filter/UploadToCPAN
+
 =back
 
 =head1 METHODS
 
 =over
 
+=item before_release
+
+The processing function that is called automatically before a release. It
+attempts to locate the plugin named by C<releaser_name>. If found, it stores
+the releaser via C<$self->_releaser> for use during C<after_release>.
+
 =item after_release
 
 The main processing function that is called automatically after the release is complete.
+
+It signs the release archive with B<SigStore's cosign> and uploads it to PAUSE
+(if upload_to_cpan = 1)
 
 =back
 
