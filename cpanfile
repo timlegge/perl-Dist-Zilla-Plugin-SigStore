@@ -2,8 +2,8 @@
 
 requires "Convert::ASN1" => "0";
 requires "Crypt::OpenSSL::X509" => "0";
-requires "Dist::Zilla::Role::AfterRelease" => "0";
-requires "Dist::Zilla::Role::BeforeRelease" => "0";
+requires "Dist::Zilla::Plugin::UploadToCPAN" => "0";
+requires "Dist::Zilla::Role::Releaser" => "0";
 requires "File::Slurper" => "0";
 requires "File::Which" => "0";
 requires "JSON::MaybeXS" => "0";

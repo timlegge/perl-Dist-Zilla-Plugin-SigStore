@@ -7,6 +7,7 @@ use warnings;
 # ABSTRACT: Sign Release with SigStore
 
 use Moose;
+extends 'Dist::Zilla::Plugin::UploadToCPAN';
 use Convert::ASN1;
 use Crypt::OpenSSL::X509;
 use File::Slurper qw/read_binary/;
@@ -14,16 +15,13 @@ use File::Which qw(which);
 use JSON::MaybeXS;
 use MIME::Base64  qw/decode_base64/;
 use Try::Tiny;
-with 'Dist::Zilla::Role::BeforeRelease',
-     'Dist::Zilla::Role::AfterRelease';
+with 'Dist::Zilla::Role::Releaser';
 
 use namespace::autoclean;
 
 has upload_to_cpan      => (is => 'ro', default => 1);
 has answer_yes          => (is => 'ro', default => 0);
 has sigstore_extension  => (is => 'ro', default => 'sigstore.json');
-has releaser_name       => (is => 'ro', default => '@Filter/UploadToCPAN');
-has _releaser           => (is => 'rw', init_arg => undef,);
 has _cosign_app => (
     is      => 'ro',
     lazy    => 1,
@@ -151,31 +149,17 @@ sub _verify_sigstore_signature {
   return $exit_code == 0 ? 1 : 0;
 }
 
-sub before_release {
-  my $self = shift;
+sub release {
+  my ($self, $archive) = @_;
 
-  return unless $self->upload_to_cpan;
+  my $signed = $self->_sign_release("$archive");
+  my $bundle = $archive . '.' . $self->sigstore_extension;
 
-  my $releaser = $self->zilla->plugin_named($self->releaser_name);
-
-  $self->log_fatal("Unable to locate a releaser") if ! defined $releaser;
-  $self->_releaser($releaser);
-
-  return;
-}
-
-sub after_release {
-  my $self      = shift;
-  my $filename  = shift;
-
-  my $signed = $self->_sign_release($filename);
-  my $bundle = $filename . '.' . $self->sigstore_extension;
-
-  if ($signed && $self->upload_to_cpan && -f $bundle) {
-    my $uploader = $self->_releaser->uploader;
-    my $verified = $self->_verify_sigstore_signature($filename, $bundle);
+  if ($signed && $self->upload_to_cpan && -f "$bundle") {
+    my $verified = $self->_verify_sigstore_signature("$archive", "$bundle");
     if ($verified == 1) {
-      $uploader->upload_file($bundle);
+      $self->uploader->upload_file("$archive");
+      $self->uploader->upload_file("$bundle");
     } else {
         $self->log("CRITICAL: verification of signature prior to upload failed");
         $self->log_fatal("CRITICAL: This should not happen!!!!");
@@ -205,8 +189,10 @@ __END__
 
 In your F<dist.ini>:
 
+    [@Filter]
+    remove = UploadToCPAN
+
     [SigStore::SignRelease]
-    releaser_name      = @Filter/UploadToCPAN       ; The releaser that is being used
     upload_to_cpan     = 1             ; Upload the sigstore bundle to CPAN (optional)
     sigstore_extension = sigstore.json ; Extension of the sigstore bundle (optional)
     answer_yes         = 1             ; Answer yes to any cosign messages (Default = 0)
@@ -221,6 +207,10 @@ This plugin requires that your Dist::Zilla configuration do the following:
 
 There are numerous combinations of Dist::Zilla plugins that can perform those
 functions.
+
+ 2. This Plugin replaces 'Dist::Zilla::Plugin::UploadToCPAN'
+
+You will need to remove it from your dist.ini process as documented in the SYNOPSIS.
 
 =head1 DESCRIPTION
 
@@ -267,31 +257,17 @@ L<https://github.com/timlegge/perl-Dist-Zilla-Plugin-SigStore/blob/main/example/
     true (1) or false (0) - Default = 0
     This answers yes to any cosign messages that require an answer.
 
-=item releaser_name
-    The name of the Dist::Zilla releaser plugin to use for uploading the
-    sigstore bundle. Defaults to '@Filter/UploadToCPAN'. Change this if
-    your bundle plugin has a different name in dist.ini.
-
-    example: releaser_name = @Filter/UploadToCPAN
-
 =back
 
 =head1 METHODS
 
 =over
 
-=item before_release
+=item release
 
-The processing function that is called automatically before a release. It
-attempts to locate the plugin named by C<releaser_name>. If found, it stores
-the releaser via C<$self->_releaser> for use during C<after_release>.
-
-=item after_release
-
-The main processing function that is called automatically after the release is complete.
-
-It signs the release archive with B<SigStore's cosign> and uploads it to PAUSE
-(if upload_to_cpan = 1)
+The main release and upload function.  It signs the archive with 'cosign'
+and then uploads the archive and signature bundle if the signing was
+successful and the signature matches.
 
 =back
 
