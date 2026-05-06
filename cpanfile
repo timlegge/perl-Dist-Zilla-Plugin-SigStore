@@ -2,8 +2,7 @@
 
 requires "Convert::ASN1" => "0";
 requires "Crypt::OpenSSL::X509" => "0";
-requires "Dist::Zilla::Role::AfterRelease" => "0";
-requires "Dist::Zilla::Role::BeforeRelease" => "0";
+requires "Dist::Zilla::Plugin::UploadToCPAN" => "0";
 requires "File::Slurper" => "0";
 requires "File::Which" => "0";
 requires "JSON::MaybeXS" => "0";
@@ -11,6 +10,7 @@ requires "MIME::Base64" => "0";
 requires "Moose" => "0";
 requires "Try::Tiny" => "0";
 requires "namespace::autoclean" => "0";
+requires "perl" => "5.020";
 requires "strict" => "0";
 requires "warnings" => "0";
 

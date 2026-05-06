@@ -4,15 +4,17 @@ Dist::Zilla::Plugin::SigStore::SignRelease - Sign Release with SigStore
 
 # VERSION
 
-version 0.02
+version 0.03
 
 # SYNOPSIS
 
 In your `dist.ini`:
 
-```perl
+```
+[@Filter]
+remove = UploadToCPAN
+
 [SigStore::SignRelease]
-releaser_name      = @Filter/UploadToCPAN       ; The releaser that is being used
 upload_to_cpan     = 1             ; Upload the sigstore bundle to CPAN (optional)
 sigstore_extension = sigstore.json ; Extension of the sigstore bundle (optional)
 answer_yes         = 1             ; Answer yes to any cosign messages (Default = 0)
@@ -34,6 +36,12 @@ This plugin requires that your Dist::Zilla configuration do the following:
 
 There are numerous combinations of Dist::Zilla plugins that can perform those
 functions.
+
+```
+2. This Plugin replaces 'Dist::Zilla::Plugin::UploadToCPAN'
+```
+
+You will need to remove it from your dist.ini process as documented in the SYNOPSIS.
 
 # SIGSTORE INFORMATION
 
@@ -76,29 +84,14 @@ can be used to manually verify signatures.
 - answer\_yes
     true (1) or false (0) - Default = 0
     This answers yes to any cosign messages that require an answer.
-- releaser\_name
-    The name of the Dist::Zilla releaser plugin to use for uploading the
-    sigstore bundle. Defaults to '@Filter/UploadToCPAN'. Change this if
-    your bundle plugin has a different name in dist.ini.
-
-    ```
-    example: releaser_name = @Filter/UploadToCPAN
-    ```
 
 # METHODS
 
-- before\_release
+- release
 
-    The processing function that is called automatically before a release. It
-    attempts to locate the plugin named by `releaser_name`. If found, it stores
-    the releaser via `$self-`\_releaser> for use during `after_release`.
-
-- after\_release
-
-    The main processing function that is called automatically after the release is complete.
-
-    It signs the release archive with **SigStore's cosign** and uploads it to PAUSE
-    (if upload\_to\_cpan = 1)
+    The main release and upload function.  It signs the archive with 'cosign'
+    and then uploads the archive and signature bundle if the signing was
+    successful and the signature matches.
 
 # AUTHOR
 

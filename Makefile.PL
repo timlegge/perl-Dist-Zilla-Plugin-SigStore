@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-
+use 5.020;
 
 use ExtUtils::MakeMaker;
 
@@ -13,12 +13,12 @@ my %WriteMakefileArgs = (
   },
   "DISTNAME" => "Dist-Zilla-Plugin-SigStore-SignRelease",
   "LICENSE" => "perl",
+  "MIN_PERL_VERSION" => "5.020",
   "NAME" => "Dist::Zilla::Plugin::SigStore::SignRelease",
   "PREREQ_PM" => {
     "Convert::ASN1" => 0,
     "Crypt::OpenSSL::X509" => 0,
-    "Dist::Zilla::Role::AfterRelease" => 0,
-    "Dist::Zilla::Role::BeforeRelease" => 0,
+    "Dist::Zilla::Plugin::UploadToCPAN" => 0,
     "File::Slurper" => 0,
     "File::Which" => 0,
     "JSON::MaybeXS" => 0,
@@ -29,7 +29,7 @@ my %WriteMakefileArgs = (
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.02",
+  "VERSION" => "0.03",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -39,8 +39,7 @@ my %WriteMakefileArgs = (
 my %FallbackPrereqs = (
   "Convert::ASN1" => 0,
   "Crypt::OpenSSL::X509" => 0,
-  "Dist::Zilla::Role::AfterRelease" => 0,
-  "Dist::Zilla::Role::BeforeRelease" => 0,
+  "Dist::Zilla::Plugin::UploadToCPAN" => 0,
   "File::Slurper" => 0,
   "File::Which" => 0,
   "JSON::MaybeXS" => 0,
