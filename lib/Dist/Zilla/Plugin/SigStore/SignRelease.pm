@@ -15,7 +15,6 @@ use File::Which qw(which);
 use JSON::MaybeXS;
 use MIME::Base64  qw/decode_base64/;
 use Try::Tiny;
-with 'Dist::Zilla::Role::Releaser';
 
 use namespace::autoclean;
 
@@ -158,8 +157,8 @@ sub release {
   if ($signed && $self->upload_to_cpan && -f "$bundle") {
     my $verified = $self->_verify_sigstore_signature("$archive", "$bundle");
     if ($verified == 1) {
-      $self->uploader->upload_file("$archive");
-      $self->uploader->upload_file("$bundle");
+      $self->SUPER::release("$archive");
+      $self->SUPER::release("$bundle");
     } else {
         $self->log("CRITICAL: verification of signature prior to upload failed");
         $self->log_fatal("CRITICAL: This should not happen!!!!");
