@@ -189,7 +189,8 @@ __END__
 In your F<dist.ini>:
 
     [@Filter]
-    remove = UploadToCPAN
+    -bundle = @Basic
+    -remove = UploadToCPAN
 
     [SigStore::SignRelease]
     upload_to_cpan     = 1             ; Upload the sigstore bundle to CPAN (optional)
