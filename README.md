@@ -4,7 +4,7 @@ Dist::Zilla::Plugin::SigStore::SignRelease - Sign Release with SigStore
 
 # VERSION
 
-version 0.03
+version 0.04
 
 # SYNOPSIS
 
@@ -71,19 +71,29 @@ can be used to manually verify signatures.
 
 # ATTRIBUTES
 
-- upload\_to\_cpan
-    true (1) or false (0) - Default = 1
-- sigstore\_extension
-    Defaults to 'sigstore.json' (Optional)
-    The extension is appended to the end of the distribution's filename.
+- upload\_to\_cpan (Optional)
 
     ```
+    true (1) or false (0) - Default = 1
+    ```
+
+- sigstore\_extension (Optional)
+
+    ```
+    Defaults to 'sigstore.json'
+
+    The extension is appended to the end of the distribution's filename.
+
     example: Distribution-0.99.tar.gz.sigstore.json
     ```
 
-- answer\_yes
+- answer\_yes (Optional)
+
+    ```
     true (1) or false (0) - Default = 0
+
     This answers yes to any cosign messages that require an answer.
+    ```
 
 # METHODS
 

@@ -243,17 +243,22 @@ L<https://github.com/timlegge/perl-Dist-Zilla-Plugin-SigStore/blob/main/example/
 
 =over
 
-=item upload_to_cpan
+=item upload_to_cpan (Optional)
+
     true (1) or false (0) - Default = 1
 
-=item sigstore_extension
-    Defaults to 'sigstore.json' (Optional)
+=item sigstore_extension (Optional)
+
+    Defaults to 'sigstore.json'
+
     The extension is appended to the end of the distribution's filename.
 
     example: Distribution-0.99.tar.gz.sigstore.json
 
-=item answer_yes
+=item answer_yes (Optional)
+
     true (1) or false (0) - Default = 0
+
     This answers yes to any cosign messages that require an answer.
 
 =back
