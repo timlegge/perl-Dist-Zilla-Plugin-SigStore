@@ -13,14 +13,18 @@ use Crypt::OpenSSL::X509;
 use Try::Tiny;
 use Convert::ASN1;
 
-my ($module, $bundle_name);
+my ($module, $bundle_name, $verify_identity);
 GetOptions(
     'module=s' => \$module,
+    'verify_identity=s' => \$verify_identity,
     'bundle=s' => \$bundle_name,
-) or die "Usage: $0 --module <file> [--bundle <file>]\n";
+) or die "Usage: $0 --module <file> [--verify_identity 'user\@gmailcom'] [--bundle <file>]\n";
 
-# Allow positional fallback: verify_sigstore.pl Module.tar.gz [bundle.json]
-$module      //= shift @ARGV or die "Usage: $0 --module <file> [--bundle <file>]\n";
+# Allow positional fallback: verify_sigstore.pl Module.tar.gz user\@gmailcom' [bundle.json]
+$module      //= shift @ARGV
+    or die "Usage: $0 --module <file> --verify_identity 'user\@gmailcom' [--bundle <file>]\n";
+$verify_identity //= shift @ARGV
+    or die "Usage: $0 --module <file> --verify_identity 'user\@gmailcom' [--bundle <file>]\n";;
 $bundle_name //= shift @ARGV;
 
 # Guess bundle name from module filename if not provided
@@ -96,7 +100,7 @@ my $identity    = _decode_oid_value($extensions, '2.5.29.17');
 my $issuer      = _decode_oid_value($extensions, '1.3.6.1.4.1.57264.1.1');
 
 my $verified = try {
-        `cosign verify-blob $module --bundle $bundle_name --certificate-identity $identity --certificate-oidc-issuer $issuer 2>&1`;
+        `cosign verify-blob $module --bundle $bundle_name --certificate-identity $verify_identity --certificate-oidc-issuer $issuer 2>&1`;
     };
 my $exit_code = $? >> 8;
 
