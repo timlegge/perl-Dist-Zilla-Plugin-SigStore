@@ -2,6 +2,11 @@ Revision history for Dist-Zilla-Plugin-SigStore::SignRelease
 
 {{$NEXT}}
 
+0.05 -- Thu May 07 23:01:56 ADT 2026
+
+    [Changes since 0.03]
+    - Patch from @Grinnz to fix synopsis Filter bundle example
+
 0.04 -- Thu May 07 20:00:56 ADT 2026
 
     [Changes since 0.03]
