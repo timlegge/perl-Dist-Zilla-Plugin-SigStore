@@ -4,7 +4,7 @@ Dist::Zilla::Plugin::SigStore::SignRelease - Sign Release with SigStore
 
 # VERSION
 
-version 0.04
+version 0.05
 
 # SYNOPSIS
 
@@ -12,7 +12,8 @@ In your `dist.ini`:
 
 ```
 [@Filter]
-remove = UploadToCPAN
+-bundle = @Basic
+-remove = UploadToCPAN
 
 [SigStore::SignRelease]
 upload_to_cpan     = 1             ; Upload the sigstore bundle to CPAN (optional)
