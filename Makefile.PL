@@ -29,6 +29,9 @@ my %WriteMakefileArgs = (
     "strict" => 0,
     "warnings" => 0
   },
+  "TEST_REQUIRES" => {
+    "Test2::V0" => 0
+  },
   "VERSION" => "0.05",
   "test" => {
     "TESTS" => "t/*.t"
@@ -45,6 +48,7 @@ my %FallbackPrereqs = (
   "JSON::MaybeXS" => 0,
   "MIME::Base64" => 0,
   "Moose" => 0,
+  "Test2::V0" => 0,
   "Try::Tiny" => 0,
   "namespace::autoclean" => 0,
   "strict" => 0,
